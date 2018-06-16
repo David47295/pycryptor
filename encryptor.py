@@ -13,11 +13,7 @@ BLOCK_SIZE = 32
 
 class FileEncryptor:
     def __init__(self, key=None):
-        if (key == None):
-            # self.key = get_random_bytes(16)
-            self.key = None
-        else:
-            self.key = key
+        self.key = key
 
     def encrypt(self, plaintext, output):
         file = open(plaintext, 'rb')
@@ -34,9 +30,9 @@ class FileEncryptor:
         file.close()
         output_file.close()
 
-    def decrypt(self, ciphertext, output):
+    def decrypt(self, ciphertext):
+        print(self.key)
         file = open(ciphertext, 'rb')
-        output_file = open(output, 'wb')
         iv = file.read(16)
         # print(test)
         # iv = base64.b64decode(test)
@@ -47,76 +43,58 @@ class FileEncryptor:
             data = unpad(base64.b64decode(file.read()), BLOCK_SIZE)
             plaintext = decryptor.decrypt(data)
             # print(unpad(plaintext, BLOCK_SIZE))
-            output_file.write(unpad(plaintext, BLOCK_SIZE))
+            # output_file.write(unpad(plaintext, BLOCK_SIZE))
+            return unpad(plaintext, BLOCK_SIZE)
         except:
             print('Oops! Something went wrong')
 
         file.close()
-        output_file.close()
 
-class FileEncrypApp(tk.Tk):
-    _encryptor = None
-    _root = None
-    def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
 
-        self._encryptor = FileEncryptor()
-
-        self._root = tk.Frame(self)
-        self._root.pack(side="top", fill="both", expand=True)
-        self._root.grid_rowconfigure(0, weight=1)
-        self._root.grid_columnconfigure(0, weight=1)
-
-        page = HomePage(parent=self._root, controller=self)
-
-        page.grid(row=0, column=0, sticky="nsew")
-        page.tkraise()
-
-    def goToPage(self, page):
-        if (page == 'NEW_KEY'):
-            frame = SaveNewKeyPage(parent=self._root, controller=self)
-            frame.grid(row=0, column=0, sticky="nsew")
-            frame.tkraise()
-
-    def setEncryptorKey(self, path):
-        key_file = open(path, 'rb')
-        self._encryptor.key = key_file.read()
-
+def generateKeyFile(path):
+    try:
+        key = open(path + '/key.txt', 'wb')
+        key.write(get_random_bytes(16))
+        print("Created your new key! Make sure you don't share the key with ANYONE!")
+    except:
+        print('Something went wrong!')
+        exit(1)
 
 if __name__ == "__main__":
     print('Welcome to the FileEncryptor!\nIf you have a key file, type y\n If you don\'t, type n\n to quit, type q')
-
+    key = None
     done = False
     while not done:
         choice = input('Enter your choice: ')
-        if (choice == 'y'):
+        if (choice =='y'):
+            try:
+                key_file = open('key.txt', 'rb')
+                key = key_file.read()
+                done = True
+            except FileNotFoundError:
+                print('Key file was not found. Make sure you have the right path')
+        if (choice == 'n'):
             key_path = input('Enter the path to the key file: ')
-        # try:
-        #     key_file = open('key.txt', 'rb')
-        #     print('Found key file')
-        #     test = FileEncryptor(key_file.read())
-        # except FileNotFoundError:
-        #     print('key file not found. Generating')
-        #     test = FileEncryptor()
-        #     output_key = open('key.txt', 'wb')
-        #     output_key.write(test.key)
-
+            generateKeyFile(key_path)
+            done = True
 
     done = False
     while not done:
-        print('Welcome to the FileEncryptor!\nType "e" to encrypt a file\nType "d" to decrypt a file.\nType done to quit')
+        print('Welcome to the FileEncryptor!\nType "d" to see your information\nType "e" to encrypt your information.\nType done to quit')
         option = input('Enter a command: ')
-        if (option == 'e'):
-            test.encrypt('plaintext.txt', 'ciphertext.txt')
         if (option == 'd'):
-            test.decrypt('ciphertext.txt', 'decrypted.txt')
+            decryp = FileEncryptor(key)
+            print(decryp.decrypt('test/ciphertext.txt'))
+        if (option == 'e'):
+            encryp = FileEncryptor(key)
+            encryp.encrypt('test/plaintext.txt', 'test/ciphertext.txt')
         if (option == "done"):
             done = True
-    BLOCK_SIZE = 32
-    key = get_random_bytes(16)
-    iv = get_random_bytes(16)
-    encryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    file = open('plaintext.txt', 'rb')
-    data = file.read()
-    cipher_text = encryption_suite.encrypt(pad(data, BLOCK_SIZE))
+    # BLOCK_SIZE = 32
+    # key = get_random_bytes(16)
+    # iv = get_random_bytes(16)
+    # encryption_suite = AES.new(key, AES.MODE_CBC, iv)
+    # file = open('plaintext.txt', 'rb')
+    # data = file.read()
+    # cipher_text = encryption_suite.encrypt(pad(data, BLOCK_SIZE))
 
