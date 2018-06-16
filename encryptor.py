@@ -5,6 +5,7 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
 import tkinter as tk
+from tkinter import StringVar
 from tkinter import filedialog
 from tkinter import font  as tkfont
 
@@ -86,21 +87,25 @@ class HomePage(tk.Frame):
     _controller = None
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self._key_path = StringVar(self)
         self._controller = controller
 
         tk.Label(self, text="This is the start page").grid(row=0)
 
         tk.Button(self, text="Select key file", command=self.setKeyPath).grid(row=1)
+        tk.Label(self, textvariable=self._key_path).grid(row=1, column=1)
 
         tk.Button(self, text="Generate new key file", command=lambda: self._controller.goToPage('NEW_KEY')).grid(row=2)
 
-        tk.Button(self, text="Print", command=self.test).grid(row=3)
+        next_btn = tk.Button(self, text="Next", state=tk.DISABLED, command=self.test)
+        next_btn.grid(row=3)
 
     def setKeyPath(self):
-        self._key_path = filedialog.askopenfilename()
+        self._key_path.set("Key Path: " + filedialog.askopenfilename())
 
     def test(self):
-        print(self._key_path)
+        return True
+        # print(self._key_path)
 
 class SaveNewKeyPage(tk.Frame):
     _key_path = None
