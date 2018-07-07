@@ -31,7 +31,6 @@ class FileEncryptor:
         output_file.close()
 
     def decrypt(self, ciphertext):
-        print(self.key)
         file = open(ciphertext, 'rb')
         iv = file.read(16)
         # print(test)
@@ -60,6 +59,21 @@ def generateKeyFile(path):
         print('Something went wrong!')
         exit(1)
 
+def getKeyFilePath():
+    root = tk.Tk()
+    path = tk.filedialog.askopenfilename()
+    root.destroy()
+    return path
+
+
+def saveKeyFile():
+    root = tk.Tk()
+    file = tk.filedialog.asksaveasfile(mode='wb', defaultextension=".txt")
+    file.write(get_random_bytes(16))
+    root.destroy()
+    return file.name
+
+
 if __name__ == "__main__":
     print('Welcome to the FileEncryptor!\nIf you have a key file, type y\n If you don\'t, type n\n to quit, type q')
     key = None
@@ -68,14 +82,14 @@ if __name__ == "__main__":
         choice = input('Enter your choice: ')
         if (choice =='y'):
             try:
-                key_file = open('key.txt', 'rb')
+                path = getKeyFilePath()
+                key_file = open(path, 'rb')
                 key = key_file.read()
                 done = True
             except FileNotFoundError:
                 print('Key file was not found. Make sure you have the right path')
         if (choice == 'n'):
-            key_path = input('Enter the path to the key file: ')
-            generateKeyFile(key_path)
+            saveKeyFile()
             done = True
 
     done = False
@@ -84,17 +98,11 @@ if __name__ == "__main__":
         option = input('Enter a command: ')
         if (option == 'd'):
             decryp = FileEncryptor(key)
-            print(decryp.decrypt('test/ciphertext.txt'))
+            print((decryp.decrypt('test/ciphertext.txt')).decode('utf-8'))
         if (option == 'e'):
             encryp = FileEncryptor(key)
             encryp.encrypt('test/plaintext.txt', 'test/ciphertext.txt')
         if (option == "done"):
             done = True
-    # BLOCK_SIZE = 32
-    # key = get_random_bytes(16)
-    # iv = get_random_bytes(16)
-    # encryption_suite = AES.new(key, AES.MODE_CBC, iv)
-    # file = open('plaintext.txt', 'rb')
-    # data = file.read()
-    # cipher_text = encryption_suite.encrypt(pad(data, BLOCK_SIZE))
+
 
