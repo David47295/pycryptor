@@ -8,6 +8,7 @@ import tkinter as tk
 from tkinter import StringVar
 from tkinter import filedialog
 from tkinter import font  as tkfont
+import constants
 
 BLOCK_SIZE = 32
 
@@ -35,14 +36,18 @@ class FileEncryptor:
         # print(test)
         # iv = base64.b64decode(test)
         # print(iv)
-        decryptor = AES.new(self.key, AES.MODE_CBC, iv)
+
 
         try:
+            decryptor = AES.new(self.key, AES.MODE_CBC, iv)
             data = unpad(base64.b64decode(file.read()), BLOCK_SIZE)
             plaintext = decryptor.decrypt(data)
             # print(unpad(plaintext, BLOCK_SIZE))
             # output_file.write(unpad(plaintext, BLOCK_SIZE))
             return unpad(plaintext, BLOCK_SIZE)
+        except ValueError:
+            print('Something went wrong when loading your key.\n'
+                  'Please ensure that your key file is valid')
         except:
             print('Oops! Something went wrong')
 
@@ -61,14 +66,12 @@ def generateKeyFile(path):
 def selectFile():
     root = tk.Tk()
     path = tk.filedialog.askopenfilename()
-    print(path)
     root.destroy()
     return path
 
 def selectDir():
     root = tk.Tk()
     path = tk.filedialog.askdirectory()
-    print(path)
     root.destroy()
     return path
 
@@ -81,7 +84,7 @@ def saveKeyFile():
     return key
 
 if __name__ == "__main__":
-    print('Welcome to the PyPass!\nIf you have a key file, type y\n If you don\'t, type n\n to quit, type q')
+    print(constants.WELCOME_MESSAGE)
     key = None
     done = False
     while not done:
@@ -99,19 +102,26 @@ if __name__ == "__main__":
             done = True
 
     done = False
+    print('Welcome to PyPass!')
     while not done:
-        print('Welcome to the PyPass!\nType "d" to see your passwords\nType "e" to encrypt your information.\nType done to quit')
+        print('Type "d" to see your passwords\n'
+              'Type "e" to encrypt your information.\n'
+              'Type done to quit')
         option = input('Enter a command: ')
-        if (option == 'd'):
+        if (option == constants.DECRYPT_OPT):
             decryp = FileEncryptor(key)
             path = selectFile()
-            print((decryp.decrypt(path)).decode('utf-8'))
-        if (option == 'e'):
+            info_bytestring = decryp.decrypt(path)
+            if info_bytestring:
+                print(info_bytestring.decode('utf-8'))
+        if (option == constants.ENCRYPT_OPT):
             path = selectFile()
             target = selectDir()
-            if (path != "()"):
+            if path != "" and target != "()":
                 encryp = FileEncryptor(key)
                 encryp.encrypt(path, target + '/ciphertext.txt')
+            else:
+                print("Path or target not valid. Please try again.")
         if (option == "done"):
             done = True
 
