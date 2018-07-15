@@ -20,27 +20,32 @@ class FileEncryptor:
         file = open(plaintext, 'rb')
         output_file = open(output, 'wb')
         iv = get_random_bytes(16)
+        print(iv)
         encryptor = AES.new(self.key, AES.MODE_CBC, iv)
 
-        output_file.write(base64.b64encode(iv))
         data = file.read()
-        cipher_text = encryptor.encrypt(pad(data, BLOCK_SIZE))
+        cipher_text = iv + encryptor.encrypt(pad(data, BLOCK_SIZE))
         # base64.b64encode(cipher_text)
-        output_file.write(base64.b64encode(pad(cipher_text, BLOCK_SIZE)))
+        print(base64.b64encode(cipher_text))
+        output_file.write(base64.b64encode(cipher_text))
         file.close()
         output_file.close()
 
     def decrypt(self, ciphertext):
         file = open(ciphertext, 'rb')
-        iv = file.read(16)
-        # print(test)
-        # iv = base64.b64decode(test)
-        # print(iv)
+        raw = file.read()
 
+        raw = base64.b64decode(raw)
+        # print(raw)
+        iv = raw[:16]
+        print(iv)
+
+
+        # iv = base64.b64decode(test)
 
         try:
             decryptor = AES.new(self.key, AES.MODE_CBC, iv)
-            data = unpad(base64.b64decode(file.read()), BLOCK_SIZE)
+            data = raw[16:]
             plaintext = decryptor.decrypt(data)
             # print(unpad(plaintext, BLOCK_SIZE))
             # output_file.write(unpad(plaintext, BLOCK_SIZE))
@@ -48,6 +53,7 @@ class FileEncryptor:
         except ValueError:
             print('Something went wrong when loading your key.\n'
                   'Please ensure that your key file is valid')
+            raise
         except:
             print('Oops! Something went wrong')
 
@@ -111,9 +117,10 @@ if __name__ == "__main__":
         if (option == constants.DECRYPT_OPT):
             decryp = FileEncryptor(key)
             path = selectFile()
-            info_bytestring = decryp.decrypt(path)
-            if info_bytestring:
-                print(info_bytestring.decode('utf-8'))
+            if (path != "()"):
+                info_bytestring = decryp.decrypt(path)
+                if info_bytestring:
+                    print(info_bytestring.decode('utf-8'))
         if (option == constants.ENCRYPT_OPT):
             path = selectFile()
             target = selectDir()
