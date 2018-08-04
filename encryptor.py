@@ -3,11 +3,9 @@ import base64
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
+from key import KeyGenerator
 
-import tkinter as tk
-from tkinter import StringVar
-from tkinter import filedialog
-from tkinter import font  as tkfont
+import filesystem
 import constants
 
 BLOCK_SIZE = 32
@@ -20,13 +18,13 @@ class FileEncryptor:
         file = open(plaintext, 'rb')
         output_file = open(output, 'wb')
         iv = get_random_bytes(16)
-        print(iv)
+        # print(iv)
         encryptor = AES.new(self.key, AES.MODE_CBC, iv)
 
         data = file.read()
         cipher_text = iv + encryptor.encrypt(pad(data, BLOCK_SIZE))
         # base64.b64encode(cipher_text)
-        print(base64.b64encode(cipher_text))
+        # print(base64.b64encode(cipher_text))
         output_file.write(base64.b64encode(cipher_text))
         file.close()
         output_file.close()
@@ -38,7 +36,6 @@ class FileEncryptor:
         raw = base64.b64decode(raw)
         # print(raw)
         iv = raw[:16]
-        print(iv)
 
 
         # iv = base64.b64decode(test)
@@ -60,34 +57,6 @@ class FileEncryptor:
         file.close()
 
 
-def generateKeyFile(path):
-    try:
-        key = open(path + '/key.txt', 'wb')
-        key.write(get_random_bytes(16))
-        print("Created your new key! Make sure you don't share the key with ANYONE!")
-    except:
-        print('Something went wrong!')
-        exit(1)
-
-def selectFile():
-    root = tk.Tk()
-    path = tk.filedialog.askopenfilename()
-    root.destroy()
-    return path
-
-def selectDir():
-    root = tk.Tk()
-    path = tk.filedialog.askdirectory()
-    root.destroy()
-    return path
-
-def saveKeyFile():
-    root = tk.Tk()
-    file = tk.filedialog.asksaveasfile(mode='wb', defaultextension=".txt")
-    key = get_random_bytes(16)
-    file.write(key)
-    root.destroy()
-    return key
 
 if __name__ == "__main__":
     print(constants.WELCOME_MESSAGE)
@@ -97,14 +66,15 @@ if __name__ == "__main__":
         choice = input('Enter your choice: ')
         if (choice =='y'):
             try:
-                path = selectFile()
+                path = filesystem.selectFile()
                 key_file = open(path, 'rb')
                 key = key_file.read()
                 done = True
             except FileNotFoundError:
                 print('Key file was not found. Make sure you have the right path')
         if (choice == 'n'):
-            key = saveKeyFile()
+            generator = KeyGenerator()
+            key = generator.saveKeyFile()
             done = True
 
     done = False
@@ -112,23 +82,32 @@ if __name__ == "__main__":
     while not done:
         print('Type "d" to see your passwords\n'
               'Type "e" to encrypt your information.\n'
+              'Type "k" to change your key\n'
               'Type done to quit')
         option = input('Enter a command: ')
         if (option == constants.DECRYPT_OPT):
             decryp = FileEncryptor(key)
-            path = selectFile()
+            path = filesystem.selectFile()
             if (path != "()"):
                 info_bytestring = decryp.decrypt(path)
                 if info_bytestring:
                     print(info_bytestring.decode('utf-8'))
         if (option == constants.ENCRYPT_OPT):
-            path = selectFile()
-            target = selectDir()
+            path = filesystem.selectFile()
+            target = filesystem.selectDir()
             if path != "" and target != "()":
                 encryp = FileEncryptor(key)
                 encryp.encrypt(path, target + '/ciphertext.txt')
             else:
                 print("Path or target not valid. Please try again.")
+        if (option == constants.CHANGE_KEY_OPT):
+            path = filesystem.selectFile()
+            if path:
+                key_file = open(path, 'rb')
+                key = key_file.read()
+                print("Succesfully swapped key!")
+            else:
+                print("Error when swapping key")
         if (option == "done"):
             done = True
 
